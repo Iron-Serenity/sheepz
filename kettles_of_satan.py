@@ -1,6 +1,7 @@
 import random
 from actions import *
 from board_state import *
+from game_conf import *
 
 class TurnPrompter:
   
@@ -29,10 +30,30 @@ class TurnPrompter:
         self._trader_submenu()
         user_input = input("Whatcha doin?  ")
         return self.parse_trade(user_input)
+      case 3:
+        self._print_score_header(1)
+        self._builder_submenu()
+        user_input = input("Whatcha doin?  ")
+        return self.parse_builder(user_input)
       case _:
         print("I'm afraid I don't know what you mean.")
         return None
 
+  def parse_builder(self, value):
+    parsed = TurnPrompter._try_parse_number(value)
+    if parsed is None:
+      return None
+
+    match parsed:
+      case 1:
+        self._print_score_header(1)
+        self._pasture_submenu()
+        user_input = input("Whatcha doin?  ")
+        return self.parse_pasture(user_input)
+      case _:
+        print("I'm afraid I don't know what you mean.")
+        return None
+      
   def parse_trade(self, value):
     parsed = TurnPrompter._try_parse_number(value)
     if parsed is None:
@@ -83,6 +104,19 @@ class TurnPrompter:
 
     return action
 
+  def _pasture_submenu(self):
+    print("--- Ah yes, your rolling green fields  ---")
+    print("--- Sure. They could use a sprucing up ---")
+    print("------------------------------------")
+    print("--- 1. Build a Fence (More sheep protected) - Cost: 1 grist, 10 sheep")
+    print("--- 2. Build a Garden (More sheep gained per call) - Cost: 1 grist, 10 sheep")
+    print("--- 3. Build a Nursery (More sheep from breeding) - Cost: 1 grist, 10 sheep")
+
+  def _builder_submenu(self):
+    print("--- But where? Location is so very important ---")
+    print("------------------------------------------------")
+    print("--- 1. Pastures ---")
+
   def _trader_submenu(self):
     print("--- 1. Breeder - Breed all pairs of sheep - Cost: 2 Sheep.")
     print("--- 2. Huntsman - Will give you a dog for every 5 sheep you pay.")
@@ -100,6 +134,7 @@ class TurnPrompter:
     self._print_score_header(cur_turn_number)
     print("--- 1. Call to the fields   ---")
     print("--- 2. Trade in town        ---")
+    print("--- 3. Build something      ---")
 
 
 class Turn:
@@ -110,11 +145,10 @@ class Turn:
     self._final_board_state = None
 
   def _calc_wolf_culling(self, post_action_board_state, min_percent=.7):
-    #TODO: move to constant
-    BASE_PROTECT = 20
+    base_protection = post_action_board_state.game_conf().get(GameVars.BASE_PROTECTION)
     DOG_PROTECT = 15
     total_sheep = post_action_board_state.sheep()
-    unprotected = total_sheep - BASE_PROTECT - (DOG_PROTECT * post_action_board_state.dogs())
+    unprotected = total_sheep - base_protection - (DOG_PROTECT * post_action_board_state.dogs())
     percent_taken = (random.randint(0, 3) * .1) + min_percent
     sheep_taken = percent_taken * max(unprotected, 0)
     
@@ -135,10 +169,9 @@ class Turn:
     
   def take_turn(self, action: Action):
     result_of_action = action.apply()
+    
     print("\n-----THE TOIL BY DAYLIGHT-----")
-    if action.used_charms():
-      action.charms_string();
-    action.action_string()
+    action.print_action_report()
 
     print("\n-----WHAT SLINKS IN THE NIGHT-----")
     sheep_killed = self._calc_wolf_culling(result_of_action)
@@ -162,10 +195,13 @@ class Turn:
 class GameRunner:
   def __init__(self):
     self._turns = 0;
-    self._player_board = BoardState(1, sheep=13)
+    self._player_board = None
+    self._conf = None
 
   def setup(self):
     self._turns = 0;
+    self._conf = BaseConf()
+    self._player_board = BoardState(1, self._conf, sheep=13)
 
   def play(self):
     while True:

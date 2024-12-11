@@ -1,12 +1,13 @@
 class BoardState:
 
-  def __init__(self, p_id, sheep=0, dogs=0, kettled=0, grist=0, charms=0):
+  def __init__(self, p_id, game_conf, sheep=0, dogs=0, kettled=0, grist=0, charms=0):
     self._pid = p_id
     self._sheep = sheep
     self._dogs = dogs
     self._kettled = kettled
     self._grist = grist
     self._charms=charms
+    self._game_conf = game_conf
 
   def sheep(self):
     return self._sheep
@@ -23,6 +24,9 @@ class BoardState:
   def charms(self):
     return self._charms
 
+  def game_conf(self):
+    return self._game_conf
+
   def clone_with_diff(self, sheep=0, dogs=0, kettled=0, grist=0, charms=0):
     return BoardState(
       self._pid,
@@ -30,4 +34,5 @@ class BoardState:
       dogs=self._dogs + dogs,
       kettled=self._kettled + kettled,
       grist=self._grist + grist,
-      charms=self._charms + charms)
+      charms=self._charms + charms,
+      game_conf=self._game_conf)
