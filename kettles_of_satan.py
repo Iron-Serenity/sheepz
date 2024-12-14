@@ -203,15 +203,21 @@ class GameRunner:
     self._player_board = BoardState(1, self._conf, sheep=13)
 
   def play(self):
-    while True:
+    while self._turns < 21:
       cur_turn_number = self._turns + 1
       cur_turn = Turn(self._player_board, cur_turn_number)
       prompter = TurnPrompter(self._player_board)
       action = prompter.prompt_user(cur_turn_number)
-      next_board_state = cur_turn.take_turn(action)
-      self._player_board = next_board_state
-      self._turns += 1
-
+      if action.can_apply():
+        next_board_state = cur_turn.take_turn(action)
+        self._player_board = next_board_state
+        self._turns += 1
+      else:
+        print("Hmmm something seems off there")
+    
+    print("\n\n---THE DAY HAS ARRIVED---\n")
+    print("The day finally arrives and the Lord of the Land throws back the hills like bothersome tassels.")
+    print("You achieved {} favor before the end of days!".format(self._player_board.kettled()))
 
 if __name__ == "__main__":
   runner = GameRunner()

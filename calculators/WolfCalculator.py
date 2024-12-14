@@ -15,7 +15,7 @@ class WolfCalculator:
     self.board_state = board_state
 
   def base_protection(self) -> int:
-    bonus_protection_from_fence = self.board_state.has_pasture_building(BuildingNames.FENCE)
+    bonus_protection_from_fence = 60 if self.board_state.has_pasture_building(BuildingNames.FENCE) else 0 
     return self.board_state.game_conf().get(GameVars.BASE_PROTECTION) + bonus_protection_from_fence
 
   def calc_dog_protection(self) -> int:
