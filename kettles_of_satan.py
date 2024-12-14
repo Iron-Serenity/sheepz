@@ -1,6 +1,7 @@
 import random
 from actions import *
 from board_state import *
+from calculators.WolfCalculator import WolfCalculator, WolfInfoReporter
 from game_conf import *
 
 class TurnPrompter:
@@ -53,7 +54,19 @@ class TurnPrompter:
       case _:
         print("I'm afraid I don't know what you mean.")
         return None
-      
+
+  def parse_pasture(self, value):
+    parsed = TurnPrompter._try_parse_number(value)
+    if parsed is None:
+      return None
+
+    match parsed:
+      case 1:
+        return BuilderAction(self._board_state, BuildingNames.FENCE)
+      case _:
+        print("I'm afraid I don't know what you mean.")
+        return None
+
   def parse_trade(self, value):
     parsed = TurnPrompter._try_parse_number(value)
     if parsed is None:
@@ -92,15 +105,6 @@ class TurnPrompter:
       action = self.parse_main(user_input)
       if action is not None:
         successful_parse = True
-
-    if (False):
-      parsed = False
-      self._trader_submenu()
-      try:
-        parsed = int(input("Whatcha doin?  "))
-        successful_parse = True
-      except e:
-        pass
 
     return action
 
@@ -174,18 +178,13 @@ class Turn:
     action.print_action_report()
 
     print("\n-----WHAT SLINKS IN THE NIGHT-----")
-    sheep_killed = self._calc_wolf_culling(result_of_action)
-    charms_spent=0
-    if (sheep_killed > 1 and result_of_action.charms() > 0):
-      charms_spent = 1 + floor(result_of_action.charms()/4)
-      percent_redux = min(.6, charms_spent * .1)
-      new_min_percent = .7 - percent_redux
-      new_sheep_killed = max(1, self._calc_wolf_culling(result_of_action, min_percent=new_min_percent) - 1)
-      print(">> As the wolves gather in the wreathing shadows, your bone charms jangle whispers of protection.")
-      print(">> {} of your charms expend their energy reducing the sheep taken from {} to {}.".format(charms_spent, sheep_killed, new_sheep_killed))
-      sheep_killed = new_sheep_killed
-      
-      
+
+    wolf_turn_info = WolfCalculator(result_of_action).calc_wolves_hunt()
+
+    sheep_killed = wolf_turn_info.sheep_taken_final
+    charms_spent = wolf_turn_info.charms_spent
+
+    WolfInfoReporter.print_report(wolf_turn_info)
     self._wolves_report(sheep_killed, result_of_action)
     post_wolves = result_of_action.clone_with_diff(sheep=-1 * sheep_killed, charms=-1 * charms_spent)
     
@@ -194,7 +193,7 @@ class Turn:
   
 class GameRunner:
   def __init__(self):
-    self._turns = 0;
+    self._turns = 0
     self._player_board = None
     self._conf = None
 

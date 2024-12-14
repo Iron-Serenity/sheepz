@@ -17,6 +17,12 @@ class Building:
   def effect(self):
     return self._effect
 
+  def name(self) -> str:
+    return self._name
+
+  def short_name(self) -> str:
+    return self._short
+
 class Fence(Building):
   def __init__(self):
     super().__init__(BuildingNames.FENCE, "FNC")

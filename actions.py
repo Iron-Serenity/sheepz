@@ -189,11 +189,13 @@ class HireBoneCarverAction(Action):
 class BuilderAction(Action):
   def __init__(self, board_state: BoardState, building_chosen):
     super().__init__(board_state)
-    self._bulding_built = building_chosen
+    self._building_built = building_chosen
 
   def can_apply(self):
-    return True #lol
+    return self._board_state.grist() >= 1 and self._board_state.sheep() >= 10
 
   def apply(self):
-    building = BuildingFactory.make_building(self._bulding_built)
+    building = BuildingFactory.make_building(self._building_built)
+    if self._building_built == BuildingNames.FENCE:
+      return self._board_state.clone_with_diff(sheep=-10, grist=-1, pasture_building=building)
     
