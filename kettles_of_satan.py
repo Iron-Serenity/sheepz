@@ -63,6 +63,10 @@ class TurnPrompter:
     match parsed:
       case 1:
         return BuilderAction(self._board_state, BuildingNames.FENCE)
+      case 2:
+        return BuilderAction(self._board_state, BuildingNames.GARDEN)
+      case 3:
+        return BuilderAction(self._board_state, BuildingNames.NURSERY)
       case _:
         print("I'm afraid I don't know what you mean.")
         return None
@@ -200,7 +204,7 @@ class GameRunner:
   def setup(self):
     self._turns = 0;
     self._conf = BaseConf()
-    self._player_board = BoardState(1, self._conf, sheep=13)
+    self._player_board = BoardState(1, self._conf, sheep=20)
 
   def play(self):
     while self._turns < 21:
