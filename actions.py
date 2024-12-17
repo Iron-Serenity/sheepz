@@ -45,6 +45,9 @@ class CallToFieldsAction(Action):
     base_sheep_found = 2
     range_found = 3
     rolls = 0
+    if (self._board_state.has_pasture_building(BuildingNames.GARDEN)):
+      base_sheep_found += 3
+      range_found += 7
     original_roll = random.randint(2,5)
     max_reroll = 0
     
@@ -82,18 +85,23 @@ class HireBreederAction(Action):
     return self._board_state.sheep() >=2
   
   def _gen_spawn_func(self):
+    sheep_per_pair = 1.7 if self._board_state.has_pasture_building(BuildingNames.NURSERY) else 1
     if (self._board_state.charms() > 0):
       self._used_charms = True
       self._charms_used = self.calc_charm_use()
       diminish_factor = .75 - (.05 * self._charms_used)
       dim_func = diminish_returns_func(diminish_factor)
-      return lambda x: (x/2) + dim_func(x)
+      return lambda x: (sheep_per_pair * x / 2) + dim_func(x)
 
-    return lambda x:(x/2)
+    return lambda x:(sheep_per_pair * x / 2)
 
   def apply(self):
     sheep_after_pay = self._board_state.sheep() - 2
-    self._sheep_spawned = floor(self._gen_spawn_func()(sheep_after_pay))
+
+    if self._board_state.has_pasture_building(BuildingNames.NURSERY):
+      self._sheep_spawned = ceil(self._gen_spawn_func()(self._board_state.sheep()))
+    else:
+      self._sheep_spawned = floor(self._gen_spawn_func()(sheep_after_pay))
 
     return self._board_state.clone_with_diff(sheep=(self._sheep_spawned - 2), charms=(self._charms_used * -1))
 
@@ -192,10 +200,12 @@ class BuilderAction(Action):
     self._building_built = building_chosen
 
   def can_apply(self):
-    return self._board_state.grist() >= 1 and self._board_state.sheep() >= 10
+    cost = BuildingFactory.make_building(self._building_built).cost()
+    return cost.sheep <= self._board_state.sheep() and cost.grist <= self._board_state.grist()
 
   def apply(self):
     building = BuildingFactory.make_building(self._building_built)
-    if self._building_built == BuildingNames.FENCE:
-      return self._board_state.clone_with_diff(sheep=-10, grist=-1, pasture_building=building)
+    return self._board_state.clone_with_diff(sheep=-building.cost().sheep,
+                                             grist=building.cost().grist,
+                                             pasture_building=building)
     
