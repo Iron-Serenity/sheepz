@@ -3,6 +3,8 @@ from actions import *
 from board_state import *
 from calculators.WolfCalculator import WolfCalculator, WolfInfoReporter
 from game_conf import *
+from turn_takers.terminal_player import *
+from turn_takers.random_ai.random_ai import *
 
 class TurnPrompter:
   
@@ -196,17 +198,18 @@ class Turn:
     return post_wolves
   
 class GameRunner:
-  def __init__(self):
+  def __init__(self, turn_taker=None):
     self._turns = 0
     self._player_board = None
     self._conf = None
+    self._turn_taker = turn_taker if turn_taker is not None else TerminalPlayer()
 
   def setup(self):
     self._turns = 0;
     self._conf = BaseConf()
     self._player_board = BoardState(1, self._conf, sheep=20)
 
-  def play(self):
+  def play_leg(self):
     while self._turns < 21:
       cur_turn_number = self._turns + 1
       cur_turn = Turn(self._player_board, cur_turn_number)
@@ -223,7 +226,24 @@ class GameRunner:
     print("The day finally arrives and the Lord of the Land throws back the hills like bothersome tassels.")
     print("You achieved {} favor before the end of days!".format(self._player_board.kettled()))
 
+  def play(self):
+    while self._turns < 21:
+      cur_turn_number = self._turns + 1
+      cur_turn = Turn(self._player_board, cur_turn_number)
+      action = self._turn_taker.take_turn(self._player_board)
+      if action is not None and action.can_apply():
+        next_board_state = cur_turn.take_turn(action)
+        self._player_board = next_board_state
+        self._turns += 1
+      else:
+        print("Hmmm something seems off there")
+    
+    print("\n\n---THE DAY HAS ARRIVED---\n")
+    print("The day finally arrives and the Lord of the Land throws back the hills like bothersome tassels.")
+    print("You achieved {} favor before the end of days!".format(self._player_board.kettled()))
+
+
 if __name__ == "__main__":
-  runner = GameRunner()
+  runner = GameRunner(RandomAi())
   runner.setup()
   runner.play()

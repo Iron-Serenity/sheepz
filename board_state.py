@@ -16,6 +16,9 @@ class BoardState:
 
     self._pasture_slot: Building = pasture_slot
 
+  def turn_number(self):
+    return 1
+
   def sheep(self):
     return self._sheep
 

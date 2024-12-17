@@ -123,6 +123,9 @@ class HireHuntsmanAction(Action):
     self._dogs_acquired = 0
 
   def can_apply(self):
+    if self._sheep_paid is None:
+      return False
+
     return 0 <= self._sheep_paid <= self._board_state.sheep()
 
   def apply(self):
@@ -158,6 +161,9 @@ class HirePriestAction(Action):
     self._grist_gained = 0
 
   def can_apply(self):
+    if self._sheep_paid is None:
+      return False
+
     return 0 <= self._sheep_paid <= self._board_state.sheep()
 
   def apply(self):
@@ -180,6 +186,9 @@ class HireBoneCarverAction(Action):
     self._charms_crafted = 0
 
   def can_apply(self):
+    if self._sheep_paid is None:
+      return False
+      
     return 0 < self._sheep_paid <= self._board_state.sheep()
 
   #TODO: extract to common utils
